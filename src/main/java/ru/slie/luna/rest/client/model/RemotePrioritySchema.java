@@ -2,7 +2,7 @@ package ru.slie.luna.rest.client.model;
 
 import java.util.List;
 
-public class PrioritySchema {
+public class RemotePrioritySchema {
     private Long id;
     private String name;
     private List<RemotePriority> priorities;

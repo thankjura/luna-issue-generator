@@ -1,8 +1,6 @@
 package ru.slie.luna.rest.client.generator.commands;
 
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClient;
 import picocli.CommandLine;
 import ru.slie.luna.rest.client.LunaRestClient;
 import ru.slie.luna.rest.client.generator.MainCommand;
@@ -28,7 +26,7 @@ public class ProjectCommand implements Runnable {
     @CommandLine.Command(name = "show", description = "Информация о проекте")
     static class ProjectList implements Runnable {
         @CommandLine.ParentCommand
-        private ProjectCommand parent; // Ссылка на команду project
+        private ProjectCommand parent;
 
         @CommandLine.Parameters(index = "0", description = "Код проекта")
         private String projectKey;
@@ -59,7 +57,7 @@ public class ProjectCommand implements Runnable {
     @CommandLine.Command(name = "show", description = "Вывести список всех проектов")
     static class List implements Runnable {
         @CommandLine.ParentCommand
-        private ProjectCommand parent; // Ссылка на команду project
+        private ProjectCommand parent;
 
         @CommandLine.Option(names = {"-l", "--limit"}, description = "Лимит проектов", defaultValue = "10")
         private int limit = 10;
@@ -70,8 +68,8 @@ public class ProjectCommand implements Runnable {
         @Override
         public void run() {
             MainCommand global = parent.mainCommand;
-            RestClient client = global.getLunaClient().get();
-            RemoteSearchResult<RemoteProject> data = client.get().uri("/rest/projects?limit={limit}", limit).retrieve().body(new ParameterizedTypeReference<>() {});
+            LunaRestClient client = global.getLunaClient();
+            RemoteSearchResult<RemoteProject> data = client.findProjects(limit);
             PrintWriter out = spec.commandLine().getOut();
             String rowTemplate = "%-6s %-10s %s%n";
             if (data != null && data.getResults() != null) {

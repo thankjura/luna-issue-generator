@@ -6,8 +6,12 @@ import org.springframework.web.client.RestClient;
 import ru.slie.luna.rest.client.model.RemoteProject;
 import ru.slie.luna.rest.client.model.RemoteProjectWithSchemas;
 import ru.slie.luna.rest.client.model.RemoteSearchResult;
+import ru.slie.luna.rest.client.model.RemoteUser;
+import ru.slie.luna.rest.client.model.request.AddRemoveRequest;
+import ru.slie.luna.rest.client.model.request.RequestUser;
 
 import java.util.Base64;
+import java.util.List;
 
 public class LunaRestClient {
     private final RestClient restClient;
@@ -33,5 +37,19 @@ public class LunaRestClient {
 
     public RemoteProjectWithSchemas getProject(String key) {
         return restClient.get().uri("/rest/projects/{limit}/schemas", key).retrieve().body(new ParameterizedTypeReference<>() {});
+    }
+
+    public RemoteSearchResult<RemoteUser> getUsers() {
+        return restClient.get().uri("/rest/users?limit").retrieve().body(new ParameterizedTypeReference<>() {});
+    }
+
+    public RemoteUser createUser(RequestUser user) {
+        return restClient.post().uri("/rest/users/create", user).body(user).retrieve().body(new ParameterizedTypeReference<>() {});
+    }
+
+    public RemoteUser addUserToGroups(String login, List<String> groups) {
+        AddRemoveRequest<String> body = new AddRemoveRequest<>();
+        body.setAdd(groups);
+        return restClient.put().uri("/rest/users/{login}/groups", login).body(body).retrieve().body(new ParameterizedTypeReference<>() {});
     }
 }

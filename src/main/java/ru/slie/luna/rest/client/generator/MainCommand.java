@@ -3,6 +3,7 @@ package ru.slie.luna.rest.client.generator;
 import picocli.CommandLine;
 import ru.slie.luna.rest.client.LunaRestClient;
 import ru.slie.luna.rest.client.generator.commands.ProjectCommand;
+import ru.slie.luna.rest.client.generator.commands.UserCommand;
 
 import java.util.concurrent.Callable;
 
@@ -10,6 +11,7 @@ import java.util.concurrent.Callable;
         mixinStandardHelpOptions = true,
         subcommands = {
                 ProjectCommand.class,
+                UserCommand.class,
         })
 public class MainCommand implements Callable<Integer> {
     @CommandLine.Option(names = {"-b", "--base-url"}, description = "Адрес сервера", required = true, scope = CommandLine.ScopeType.INHERIT)
