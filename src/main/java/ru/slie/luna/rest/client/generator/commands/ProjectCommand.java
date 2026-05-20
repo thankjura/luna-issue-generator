@@ -62,6 +62,9 @@ public class ProjectCommand implements Runnable {
         @CommandLine.Option(names = {"-l", "--limit"}, description = "Лимит проектов", defaultValue = "10")
         private int limit = 10;
 
+        @CommandLine.Option(names = {"-p", "--page"}, description = "Станица", defaultValue = "1")
+        private int page = 1;
+
         @CommandLine.Spec
         private CommandLine.Model.CommandSpec spec;
 
@@ -69,7 +72,7 @@ public class ProjectCommand implements Runnable {
         public void run() {
             MainCommand global = parent.mainCommand;
             LunaRestClient client = global.getLunaClient();
-            RemoteSearchResult<RemoteProject> data = client.findProjects(limit);
+            RemoteSearchResult<RemoteProject> data = client.findProjects(page, limit);
             PrintWriter out = spec.commandLine().getOut();
             String rowTemplate = "%-6s %-10s %s%n";
             if (data != null && data.getResults() != null) {

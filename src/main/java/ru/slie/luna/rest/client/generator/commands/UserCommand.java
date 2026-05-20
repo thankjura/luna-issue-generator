@@ -54,7 +54,7 @@ public class UserCommand implements Runnable {
         public void run() {
             MainCommand global = parent.mainCommand;
             LunaRestClient client = global.getLunaClient();
-            RemoteSearchResult<RemoteUser> data = client.getUsers();
+            RemoteSearchResult<RemoteUser> data = client.findUsers();
             PrintWriter out = spec.commandLine().getOut();
             out.printf("Пользователей в системе: %s", data.getTotal());
         }
@@ -94,7 +94,6 @@ public class UserCommand implements Runnable {
                 try {
                     created++;
                     RemoteUser user = client.createUser(generateUser(directory, emailDomain));
-                    progressBar.clear();
                     progressBar.print(++created, String.format("%-20s, %s.", user.getLogin(), user.getDisplayName()));
                     if (groups != null && !groups.isEmpty()) {
                         client.addUserToGroups(user.getLogin(), groups);

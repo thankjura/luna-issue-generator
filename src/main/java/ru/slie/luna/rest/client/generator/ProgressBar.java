@@ -13,11 +13,6 @@ public class ProgressBar {
         this.out = out;
     }
 
-    public void clear() {
-        out.printf("\r");
-        out.flush();
-    }
-
     public void print(int count, String message) {
         double progressPercent = (double) count / total;
         int numChars = (int) (progressPercent * barLength);

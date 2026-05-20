@@ -16,13 +16,13 @@ import java.util.concurrent.Callable;
                 IssueCommand.class,
         })
 public class MainCommand implements Callable<Integer> {
-    @CommandLine.Option(names = {"-b", "--base-url"}, description = "Адрес сервера", required = true, scope = CommandLine.ScopeType.INHERIT)
+    @CommandLine.Option(names = {"-b", "--base-url"}, description = "Адрес сервера", required = true)
     private String baseUrl;
 
-    @CommandLine.Option(names = {"-u", "--user"}, description = "Имя пользователя", required = true, scope = CommandLine.ScopeType.INHERIT)
+    @CommandLine.Option(names = {"-u", "--user"}, description = "Имя пользователя", required = true)
     private String user;
 
-    @CommandLine.Option(names = {"-p", "--password"}, description = "Пароль", required = true, scope = CommandLine.ScopeType.INHERIT)
+    @CommandLine.Option(names = {"-p", "--password"}, description = "Пароль", required = true)
     private String password;
 
     public LunaRestClient getLunaClient() {
