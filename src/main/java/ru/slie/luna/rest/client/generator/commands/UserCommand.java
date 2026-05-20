@@ -6,6 +6,7 @@ import picocli.CommandLine;
 import ru.slie.luna.rest.client.LunaRestClient;
 import ru.slie.luna.rest.client.generator.MainCommand;
 import ru.slie.luna.rest.client.generator.ProgressBar;
+import ru.slie.luna.rest.client.generator.TextUtils;
 import ru.slie.luna.rest.client.model.RemoteSearchResult;
 import ru.slie.luna.rest.client.model.RemoteUser;
 import ru.slie.luna.rest.client.model.request.RequestUser;
@@ -13,13 +14,13 @@ import ru.slie.luna.rest.client.model.request.RequestUser;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 @CommandLine.Command(name = "user",
         description = "Управление пользователями",
         subcommands = { UserCommand.Count.class, UserCommand.Gen.class })
 public class UserCommand implements Runnable {
     private static final Faker fakerRu = new Faker(Locale.of("ru"));
-    private static final Faker fakerEn = new Faker(Locale.ENGLISH);
 
     @CommandLine.ParentCommand
     private MainCommand mainCommand;
@@ -30,9 +31,10 @@ public class UserCommand implements Runnable {
     }
 
     public static RequestUser generateUser(int directoryId, String emailDomain) {
-        String name = fakerRu.name().firstName();
-        String lastName = fakerRu.name().lastName();
-        String login = fakerEn.credentials().username();
+        boolean isMale = new Random().nextBoolean();
+        String name = isMale? fakerRu.resolve("name.male_first_name") :  fakerRu.resolve("name.female_first_name");
+        String lastName = isMale? fakerRu.resolve("name.male_last_name") :  fakerRu.resolve("name.female_last_name");
+        String login = TextUtils.translit(lastName + "." + name);
         if (!emailDomain.trim().startsWith("@")) {
             emailDomain = "@" + emailDomain;
         }
@@ -90,6 +92,7 @@ public class UserCommand implements Runnable {
 
             while (created < count) {
                 try {
+                    created++;
                     RemoteUser user = client.createUser(generateUser(directory, emailDomain));
                     progressBar.clear();
                     progressBar.print(++created, String.format("%-20s, %s.", user.getLogin(), user.getDisplayName()));

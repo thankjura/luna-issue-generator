@@ -83,6 +83,10 @@
                                         <exclude>META-INF/notice.txt</exclude>
                                         <exclude>META-INF/spring/aot.factories</exclude>
                                         <exclude>META-INF/services/reactor.blockhound.integration.BlockHoundIntegration</exclude>
+                                        <exclude>META-INF/maven/com.github.curious-odd-man/rgxgen/pom.properties</exclude>
+                                        <exclude>META-INF/maven/com.github.curious-odd-man/rgxgen/pom.xml</exclude>
+                                        <exclude>META-INF/maven/org.yaml/snakeyaml/pom.properties</exclude>
+                                        <exclude>META-INF/maven/org.yaml/snakeyaml/pom.xml</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

@@ -3,10 +3,7 @@ package ru.slie.luna.rest.client;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
-import ru.slie.luna.rest.client.model.RemoteProject;
-import ru.slie.luna.rest.client.model.RemoteProjectWithSchemas;
-import ru.slie.luna.rest.client.model.RemoteSearchResult;
-import ru.slie.luna.rest.client.model.RemoteUser;
+import ru.slie.luna.rest.client.model.*;
 import ru.slie.luna.rest.client.model.request.AddRemoveRequest;
 import ru.slie.luna.rest.client.model.request.RequestUser;
 
@@ -51,5 +48,13 @@ public class LunaRestClient {
         AddRemoveRequest<String> body = new AddRemoveRequest<>();
         body.setAdd(groups);
         return restClient.put().uri("/rest/users/{login}/groups", login).body(body).retrieve().body(new ParameterizedTypeReference<>() {});
+    }
+
+    public Long countIssues() {
+        return restClient.get().uri("/rest/issues/count").retrieve().body(new ParameterizedTypeReference<>() {});
+    }
+
+    public RemoteStatisticResult getStatisticReport(String fieldId) {
+        return restClient.get().uri("/rest/report/statistic/group?fieldId={fieldId}", fieldId).retrieve().body(new ParameterizedTypeReference<>() {});
     }
 }
