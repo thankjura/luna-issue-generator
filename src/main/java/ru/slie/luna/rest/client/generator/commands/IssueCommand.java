@@ -1,9 +1,8 @@
 package ru.slie.luna.rest.client.generator.commands;
 
 import net.datafaker.Faker;
-import org.springframework.web.client.HttpClientErrorException;
 import picocli.CommandLine;
-import ru.slie.luna.rest.client.LunaRestClient;
+import ru.slie.luna.rest.client.JiraRestClient;
 import ru.slie.luna.rest.client.generator.MainCommand;
 import ru.slie.luna.rest.client.generator.ProgressBar;
 import ru.slie.luna.rest.client.generator.commands.utils.IssueGenerator;
@@ -20,7 +19,7 @@ import java.util.stream.Collectors;
 
 @CommandLine.Command(name = "issue",
         description = "Управление задачами",
-        subcommands = { IssueCommand.Count.class, IssueCommand.Gen.class })
+        subcommands = { IssueCommand.Gen.class })
 public class IssueCommand implements Runnable {
     private static final Faker fakerRu = new Faker(Locale.of("ru"));
 
@@ -32,42 +31,6 @@ public class IssueCommand implements Runnable {
         CommandLine.usage(this, System.out);
     }
 
-
-    @CommandLine.Command(name = "count", description = "Вывести кол-во задач")
-    public static class Count implements Runnable {
-        @CommandLine.ParentCommand
-        private IssueCommand parent;
-
-        @CommandLine.Spec
-        private CommandLine.Model.CommandSpec spec;
-
-        @CommandLine.Option(names = {"-g", "--group"}, description = "Сгруппировать по полю")
-        private String group;
-
-        @Override
-        public void run() {
-            MainCommand global = parent.mainCommand;
-            LunaRestClient client = global.getLunaClient();
-            PrintWriter out = spec.commandLine().getOut();
-            PrintWriter err = spec.commandLine().getErr();
-
-            if (group != null && !group.trim().isEmpty()) {
-                try {
-                    RemoteStatisticResult result = client.getStatisticReport(group);
-                    String rowTemplate = "%-10s %-5s | %s%n";
-                    for (RemoteStatisticGroup groupItem : result.getGroups()) {
-                        out.printf(rowTemplate, groupItem.getId(), groupItem.getCount(), groupItem.getLabel());
-                    }
-                    out.printf("%-10s %-5s", "Всего:", result.getTotalCount());
-                } catch (HttpClientErrorException e) {
-                    err.println(e.getMessage());
-                }
-            } else {
-                Long total = client.countIssues();
-                out.printf("Задач в системе: %s", total);
-            }
-        }
-    }
 
     @CommandLine.Command(name = "gen", description = "Сгенерировать")
     static class Gen implements Runnable {
@@ -95,7 +58,7 @@ public class IssueCommand implements Runnable {
         @Override
         public void run() {
             MainCommand global = parent.mainCommand;
-            LunaRestClient client = global.getLunaClient();
+            JiraRestClient client = global.getLunaClient();
             PrintWriter out = spec.commandLine().getOut();
             PrintWriter err = spec.commandLine().getErr();
             ProgressBar progressBar = new ProgressBar(out, 4);
@@ -107,15 +70,9 @@ public class IssueCommand implements Runnable {
 
             if (projects == null || projects.isEmpty()) {
                 progressBar.print(0, "Получаю список проектов");
-                while (true) {
-                    RemoteSearchResult<RemoteProject> result = client.findProjects(page++, limit);
-                    for (RemoteProject project : result.getResults()) {
-                        projectsMap.put(project.getKey(), new ProjectGenParams(project.getKey()));
-                    }
-
-                    if (result.getResults().size() < limit) {
-                        break;
-                    }
+                List<RemoteProject> result = client.getProjects();
+                for (RemoteProject project : result) {
+                    projectsMap.put(project.getKey(), new ProjectGenParams(project.getKey()));
                 }
             } else {
                 for (String project: projects) {
@@ -123,19 +80,20 @@ public class IssueCommand implements Runnable {
                 }
             }
             progressBar.print(1, "Получаю информацию о приоритетах");
-            Set<Long> allPriorities = client.getPriorities().stream().map(RemotePriority::getId).collect(Collectors.toSet());
+            Set<String> allPriorities = client.getPriorities().stream().map(RemotePriority::getId).collect(Collectors.toSet());
 
             progressBar.print(2, "Получаю информацию о проектах");
 
             for (Map.Entry<String, ProjectGenParams> entry: projectsMap.entrySet()) {
                 progressBar.print(2, entry.getKey());
-                RemoteProjectWithSchemas projectWithSchemas = client.getProject(entry.getKey());
-                if (projectWithSchemas.getIssueTypeSchema() != null) {
-                    entry.getValue().addIssueTypes(projectWithSchemas.getIssueTypeSchema().getIssueTypeIds());
+                RemoteProject projectWithSchemas = client.getProject(entry.getKey());
+                if (projectWithSchemas.getIssueTypes() != null) {
+                    entry.getValue().addIssueTypes(projectWithSchemas.getIssueTypes().stream().map(RemoteIssueType::getId).toList());
                 }
 
-                if (projectWithSchemas.getPrioritySchema() != null) {
-                    entry.getValue().addPriorities(projectWithSchemas.getPrioritySchema().getPriorities().stream().map(RemotePriority::getId).collect(Collectors.toList()));
+                RemotePrioritySchema schema = client.getProjectPrioritySchema(entry.getKey());
+                if (schema != null) {
+                    entry.getValue().addPriorities(schema.getOptionIds());
                 } else {
                     entry.getValue().addPriorities(allPriorities);
                 }
@@ -151,9 +109,9 @@ public class IssueCommand implements Runnable {
 
             for (Map.Entry<String, ProjectGenParams> entry: projectsMap.entrySet()) {
                 progressBar.print(3, "Загружаю пользователей: " + entry.getKey());
-                RemoteSearchResult<RemoteUser> result = client.findUsersForProject(entry.getKey(), 1, limit);
-                for (RemoteUser user: result.getResults()) {
-                    entry.getValue().addUser(user.getLogin());
+                List<RemoteUser> result = client.findUsersForProject(entry.getKey(), 1, limit);
+                for (RemoteUser user: result) {
+                    entry.getValue().addUser(user.getKey());
                 }
             }
             progressBar.print(4, "Готово");

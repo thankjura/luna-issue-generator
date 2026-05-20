@@ -1,12 +1,15 @@
 package ru.slie.luna.rest.client.model;
 
+import java.util.List;
+
 public class RemoteProject {
-    private Long id;
+    private String id;
     private String key;
     private String name;
     private String description;
+    private List<RemoteIssueType> issueTypes;
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
@@ -20,5 +23,9 @@ public class RemoteProject {
 
     public String getDescription() {
         return description;
+    }
+
+    public List<RemoteIssueType> getIssueTypes() {
+        return issueTypes;
     }
 }

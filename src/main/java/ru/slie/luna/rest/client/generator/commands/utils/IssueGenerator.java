@@ -13,14 +13,32 @@ public class IssueGenerator {
         this.params = params;
     }
 
+    private Map<String, String> getProjectParam(String projectKey) {
+        Map<String, String> result = new HashMap<>();
+        result.put("key", projectKey);
+        return result;
+    }
+
+    private Map<String, String> getUserParam(String userKey) {
+        Map<String, String> result = new HashMap<>();
+        result.put("key", userKey);
+        return result;
+    }
+
+    private Map<String, String> getIdParam(String id) {
+        Map<String, String> result = new HashMap<>();
+        result.put("id", id);
+        return result;
+    }
+
     public Map<String, Object> genIssue() {
         ProjectGenParams data = params.get(random.nextInt(params.size()));
         Map<String, Object> issueRequest = new HashMap<>();
-        issueRequest.put("project", data.getProjectKey());
-        issueRequest.put("issueType", data.getIssueTypes().get(random.nextInt(data.getIssueTypes().size())));
+        issueRequest.put("project", getProjectParam(data.getProjectKey()));
+        issueRequest.put("issueType", getIdParam(data.getIssueTypes().get(random.nextInt(data.getIssueTypes().size()))));
         issueRequest.put("summary", generateSummary());
         if (!data.getPriorities().isEmpty()) {
-            issueRequest.put("priority", data.getPriorities().get(random.nextInt(data.getPriorities().size())));
+            issueRequest.put("priority", getIdParam(data.getPriorities().get(random.nextInt(data.getPriorities().size()))));
         }
 
         if (random.nextInt(100) < 10) {
@@ -29,8 +47,8 @@ public class IssueGenerator {
             issueRequest.put("description", String.join("\n\n", fakerRU.lorem().paragraphs(random.nextInt(2, 5))));
         }
 
-        issueRequest.put("author", data.getUsers().get(random.nextInt(data.getUsers().size())));
-        issueRequest.put("assignee", data.getUsers().get(random.nextInt(data.getUsers().size())));
+        issueRequest.put("author", getUserParam(data.getUsers().get(random.nextInt(data.getUsers().size()))));
+        issueRequest.put("assignee", getUserParam(data.getUsers().get(random.nextInt(data.getUsers().size()))));
 
         return issueRequest;
     }

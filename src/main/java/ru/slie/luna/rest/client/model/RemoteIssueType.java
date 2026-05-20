@@ -1,14 +1,19 @@
 package ru.slie.luna.rest.client.model;
 
 public class RemoteIssueType {
-    private Long id;
+    private String id;
     private String name;
+    private Boolean subtask;
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     public String getName() {
         return name;
+    }
+
+    public Boolean getSubtask() {
+        return subtask;
     }
 }

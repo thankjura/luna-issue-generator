@@ -1,9 +1,8 @@
 package ru.slie.luna.rest.client.generator;
 
 import picocli.CommandLine;
-import ru.slie.luna.rest.client.LunaRestClient;
+import ru.slie.luna.rest.client.JiraRestClient;
 import ru.slie.luna.rest.client.generator.commands.IssueCommand;
-import ru.slie.luna.rest.client.generator.commands.ProjectCommand;
 import ru.slie.luna.rest.client.generator.commands.UserCommand;
 
 import java.util.concurrent.Callable;
@@ -11,7 +10,6 @@ import java.util.concurrent.Callable;
 @CommandLine.Command(name = "luna-issue-generator",
         mixinStandardHelpOptions = true,
         subcommands = {
-                ProjectCommand.class,
                 UserCommand.class,
                 IssueCommand.class,
         })
@@ -25,8 +23,8 @@ public class MainCommand implements Callable<Integer> {
     @CommandLine.Option(names = {"-p", "--password"}, description = "Пароль", required = true)
     private String password;
 
-    public LunaRestClient getLunaClient() {
-        return new LunaRestClient(baseUrl, user, password);
+    public JiraRestClient getLunaClient() {
+        return new JiraRestClient(baseUrl, user, password);
     }
 
     public static void main(String[] args) {

@@ -1,26 +1,16 @@
 package ru.slie.luna.rest.client.model;
 
 public class RemoteUser {
-    private Long id;
-    private String displayName;
-    private String login;
-    private String email;
+    private String key;
+    private String name;
     private Boolean active;
 
-    public Long getId() {
-        return id;
+    public String getKey() {
+        return key;
     }
 
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public String getLogin() {
-        return login;
-    }
-
-    public String getEmail() {
-        return email;
+    public String getName() {
+        return name;
     }
 
     public Boolean getActive() {

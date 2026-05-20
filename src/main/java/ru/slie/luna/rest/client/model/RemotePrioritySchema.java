@@ -5,7 +5,7 @@ import java.util.List;
 public class RemotePrioritySchema {
     private Long id;
     private String name;
-    private List<RemotePriority> priorities;
+    private List<String> optionIds;
 
     public Long getId() {
         return id;
@@ -15,7 +15,7 @@ public class RemotePrioritySchema {
         return name;
     }
 
-    public List<RemotePriority> getPriorities() {
-        return priorities;
+    public List<String> getOptionIds() {
+        return optionIds;
     }
 }

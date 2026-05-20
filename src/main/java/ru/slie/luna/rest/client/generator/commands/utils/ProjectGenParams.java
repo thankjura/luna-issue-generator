@@ -4,9 +4,9 @@ import java.util.*;
 
 public class ProjectGenParams {
     private final String projectKey;
-    private final List<Long> issueTypes;
+    private final List<String> issueTypes;
     private final List<String> users;
-    private final List<Long> priorities;
+    private final List<String> priorities;
 
     public ProjectGenParams(String projectKey) {
         this.projectKey = projectKey;
@@ -15,14 +15,14 @@ public class ProjectGenParams {
         this.priorities = new ArrayList<>();
     }
 
-    public List<Long> getIssueTypes() {
+    public List<String> getIssueTypes() {
         return issueTypes;
     }
     public List<String> getUsers() {
         return users;
     }
 
-    public void addIssueTypes(List<Long> issueTypeIds) {
+    public void addIssueTypes(List<String> issueTypeIds) {
         issueTypes.addAll(issueTypeIds);
     }
 
@@ -30,7 +30,7 @@ public class ProjectGenParams {
         users.add(login);
     }
 
-    public void addPriorities(Collection<Long> priorities) {
+    public void addPriorities(Collection<String> priorities) {
         this.priorities.addAll(priorities);
     }
 
@@ -38,7 +38,7 @@ public class ProjectGenParams {
         return projectKey;
     }
 
-    public List<Long> getPriorities() {
+    public List<String> getPriorities() {
         return priorities;
     }
 }
