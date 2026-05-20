@@ -6,11 +6,16 @@ import picocli.CommandLine;
 import ru.slie.luna.rest.client.LunaRestClient;
 import ru.slie.luna.rest.client.generator.MainCommand;
 import ru.slie.luna.rest.client.generator.ProgressBar;
+import ru.slie.luna.rest.client.generator.commands.utils.IssueGenerator;
 import ru.slie.luna.rest.client.generator.commands.utils.ProjectGenParams;
 import ru.slie.luna.rest.client.model.*;
 
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @CommandLine.Command(name = "issue",
@@ -91,7 +96,6 @@ public class IssueCommand implements Runnable {
         public void run() {
             MainCommand global = parent.mainCommand;
             LunaRestClient client = global.getLunaClient();
-            int created = 0;
             PrintWriter out = spec.commandLine().getOut();
             PrintWriter err = spec.commandLine().getErr();
             ProgressBar progressBar = new ProgressBar(out, 4);
@@ -106,7 +110,7 @@ public class IssueCommand implements Runnable {
                 while (true) {
                     RemoteSearchResult<RemoteProject> result = client.findProjects(page++, limit);
                     for (RemoteProject project : result.getResults()) {
-                        projectsMap.put(project.getKey(), new ProjectGenParams());
+                        projectsMap.put(project.getKey(), new ProjectGenParams(project.getKey()));
                     }
 
                     if (result.getResults().size() < limit) {
@@ -115,7 +119,7 @@ public class IssueCommand implements Runnable {
                 }
             } else {
                 for (String project: projects) {
-                    projectsMap.put(project, new ProjectGenParams());
+                    projectsMap.put(project, new ProjectGenParams(project));
                 }
             }
             progressBar.print(1, "Получаю информацию о приоритетах");
@@ -149,19 +153,73 @@ public class IssueCommand implements Runnable {
                 progressBar.print(3, "Загружаю пользователей: " + entry.getKey());
                 RemoteSearchResult<RemoteUser> result = client.findUsersForProject(entry.getKey(), 1, limit);
                 for (RemoteUser user: result.getResults()) {
-                    entry.getValue().addCreatorUser(user.getId());
+                    entry.getValue().addUser(user.getLogin());
                 }
             }
             progressBar.print(4, "Готово");
 
-            out.println();
             projectsMap.values().removeIf(p -> p.getIssueTypes().isEmpty());
             if (projectsMap.isEmpty()) {
+                out.println();
                 err.println("Нет доступных проектов для генерации задач.");
             }
 
 
-            out.printf("Обнаружены проекты: %s%n", projectsMap.keySet());
+            final ProgressBar progress = new ProgressBar(out, count);
+            AtomicLong created = new AtomicLong(0);
+            AtomicLong errorCount = new AtomicLong(0);
+            Semaphore semaphore = new Semaphore(threads);
+
+            IssueGenerator generator = new IssueGenerator(new ArrayList<>(projectsMap.values()));
+
+            try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                for (long i = 0; i < count; i++) {
+                    if (errorCount.get() > 10) {
+                        break;
+                    }
+                    semaphore.acquire();
+                    executor.submit(() -> {
+                        if (errorCount.get() >= 10) {
+                            semaphore.release();
+                            return;
+                        }
+
+                        try {
+                            Map<String, Object> issue = generator.genIssue();
+                            RemoteIssue remoteIssue = client.createIssue(issue);
+                            progress.print(created.incrementAndGet(), remoteIssue.getKey());
+                        } catch (Exception e) {
+                            synchronized (progress) {
+                                err.printf("\n[Ошибка] %s%n", e.getMessage());
+                                err.flush();
+                            }
+
+                            long currentErrors = errorCount.incrementAndGet();
+                            if (currentErrors >= 10) {
+                                synchronized (progress) {
+                                    err.println("\n[Ошибка] Много ошибок. Остановка генерации...");
+                                    err.flush();
+                                }
+                                executor.shutdownNow();
+                            }
+
+                        } finally {
+                            semaphore.release();
+                        }
+                    });
+                }
+            } catch (InterruptedException e) {
+                err.println("Процесс генерации был прерван");
+                Thread.currentThread().interrupt();
+            }
+
+            out.println();
+
+            if (errorCount.get() >= 10) {
+                out.println("Процесс остановлен из-за большого количества ошибок.");
+            } else {
+                out.println("Генерация успешно завершена!");
+            }
         }
     }
 }

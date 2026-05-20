@@ -14,6 +14,7 @@ import ru.slie.luna.rest.client.model.request.RequestUser;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 public class LunaRestClient {
     private final RestClient restClient;
@@ -70,6 +71,10 @@ public class LunaRestClient {
         AddRemoveRequest<String> body = new AddRemoveRequest<>();
         body.setAdd(groups);
         return restClient.put().uri("/rest/users/{login}/groups", login).body(body).retrieve().body(new ParameterizedTypeReference<>() {});
+    }
+
+    public RemoteIssue createIssue(Map<String, Object> request) {
+        return restClient.post().uri("/rest/issues/create", request).body(request).retrieve().body(new ParameterizedTypeReference<>() {});
     }
 
     public Long countIssues() {

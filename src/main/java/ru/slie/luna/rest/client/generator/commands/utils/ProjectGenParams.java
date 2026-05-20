@@ -1,25 +1,24 @@
 package ru.slie.luna.rest.client.generator.commands.utils;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ProjectGenParams {
-    private final Set<Long> issueTypes;
-    private final Set<Long> users;
-    private final Set<Long> priorities;
+    private final String projectKey;
+    private final List<Long> issueTypes;
+    private final List<String> users;
+    private final List<Long> priorities;
 
-    public ProjectGenParams() {
-        this.issueTypes = new HashSet<>();
-        this.users = new HashSet<>();
-        this.priorities = new HashSet<>();
+    public ProjectGenParams(String projectKey) {
+        this.projectKey = projectKey;
+        this.issueTypes = new ArrayList<>();
+        this.users = new ArrayList<>();
+        this.priorities = new ArrayList<>();
     }
 
-    public Set<Long> getIssueTypes() {
+    public List<Long> getIssueTypes() {
         return issueTypes;
     }
-    public Set<Long> getUsers() {
+    public List<String> getUsers() {
         return users;
     }
 
@@ -27,11 +26,19 @@ public class ProjectGenParams {
         issueTypes.addAll(issueTypeIds);
     }
 
-    public void addCreatorUser(Long creatorUserId) {
-        users.add(creatorUserId);
+    public void addUser(String login) {
+        users.add(login);
     }
 
     public void addPriorities(Collection<Long> priorities) {
         this.priorities.addAll(priorities);
+    }
+
+    public String getProjectKey() {
+        return projectKey;
+    }
+
+    public List<Long> getPriorities() {
+        return priorities;
     }
 }
