@@ -23,7 +23,7 @@ public class MainCommand implements Callable<Integer> {
     @CommandLine.Option(names = {"-p", "--password"}, description = "Пароль", required = true)
     private String password;
 
-    public JiraRestClient getLunaClient() {
+    public JiraRestClient getJiraClient() {
         return new JiraRestClient(baseUrl, user, password);
     }
 

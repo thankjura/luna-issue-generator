@@ -58,7 +58,7 @@ public class IssueCommand implements Runnable {
         @Override
         public void run() {
             MainCommand global = parent.mainCommand;
-            JiraRestClient client = global.getLunaClient();
+            JiraRestClient client = global.getJiraClient();
             PrintWriter out = spec.commandLine().getOut();
             PrintWriter err = spec.commandLine().getErr();
             ProgressBar progressBar = new ProgressBar(out, 4);
@@ -88,7 +88,7 @@ public class IssueCommand implements Runnable {
                 progressBar.print(2, entry.getKey());
                 RemoteProject projectWithSchemas = client.getProject(entry.getKey());
                 if (projectWithSchemas.getIssueTypes() != null) {
-                    entry.getValue().addIssueTypes(projectWithSchemas.getIssueTypes().stream().map(RemoteIssueType::getId).toList());
+                    entry.getValue().addIssueTypes(projectWithSchemas.getIssueTypes().stream().filter(i -> !i.getSubtask()).map(RemoteIssueType::getId).toList());
                 }
 
                 RemotePrioritySchema schema = client.getProjectPrioritySchema(entry.getKey());
@@ -99,19 +99,19 @@ public class IssueCommand implements Runnable {
                 }
             }
 
-            progressBar.print(3, "Загружаю пользователей");
-
             projectsMap.values().removeIf(p -> p.getIssueTypes().isEmpty());
 
             if (projectsMap.isEmpty()) {
                 err.println("Нет доступных проектов для генерации задач.");
             }
 
+            progressBar.print(3, "Загружаю пользователей");
+
             for (Map.Entry<String, ProjectGenParams> entry: projectsMap.entrySet()) {
                 progressBar.print(3, "Загружаю пользователей: " + entry.getKey());
                 List<RemoteUser> result = client.findUsersForProject(entry.getKey(), 1, limit);
                 for (RemoteUser user: result) {
-                    entry.getValue().addUser(user.getKey());
+                    entry.getValue().addUser(user.getName());
                 }
             }
             progressBar.print(4, "Готово");
@@ -129,6 +129,7 @@ public class IssueCommand implements Runnable {
             Semaphore semaphore = new Semaphore(threads);
 
             IssueGenerator generator = new IssueGenerator(new ArrayList<>(projectsMap.values()));
+            long startTime = System.currentTimeMillis();
 
             try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
                 for (long i = 0; i < count; i++) {
@@ -178,6 +179,20 @@ public class IssueCommand implements Runnable {
             } else {
                 out.println("Генерация успешно завершена!");
             }
+
+            long totalTimeMs = System.currentTimeMillis() - startTime;
+            double totalTimeSec = totalTimeMs / 1000.0;
+
+            double avgSpeed = 0.0;
+            if (totalTimeSec > 0) {
+                avgSpeed = created.get() / totalTimeSec;
+            }
+
+            out.printf("Создано задач: %d, за %.0f сек, средняя скорость: %.2f задач/сек%n",
+                    created.get(),
+                    totalTimeSec,
+                    avgSpeed);
+            out.flush();
         }
     }
 }

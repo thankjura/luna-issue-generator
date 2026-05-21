@@ -19,9 +19,9 @@ public class IssueGenerator {
         return result;
     }
 
-    private Map<String, String> getUserParam(String userKey) {
+    private Map<String, String> getUserParam(String username) {
         Map<String, String> result = new HashMap<>();
-        result.put("key", userKey);
+        result.put("name", username);
         return result;
     }
 
@@ -35,7 +35,7 @@ public class IssueGenerator {
         ProjectGenParams data = params.get(random.nextInt(params.size()));
         Map<String, Object> issueRequest = new HashMap<>();
         issueRequest.put("project", getProjectParam(data.getProjectKey()));
-        issueRequest.put("issueType", getIdParam(data.getIssueTypes().get(random.nextInt(data.getIssueTypes().size()))));
+        issueRequest.put("issuetype", getIdParam(data.getIssueTypes().get(random.nextInt(data.getIssueTypes().size()))));
         issueRequest.put("summary", generateSummary());
         if (!data.getPriorities().isEmpty()) {
             issueRequest.put("priority", getIdParam(data.getPriorities().get(random.nextInt(data.getPriorities().size()))));
@@ -47,7 +47,7 @@ public class IssueGenerator {
             issueRequest.put("description", String.join("\n\n", fakerRU.lorem().paragraphs(random.nextInt(2, 5))));
         }
 
-        issueRequest.put("author", getUserParam(data.getUsers().get(random.nextInt(data.getUsers().size()))));
+        issueRequest.put("reporter", getUserParam(data.getUsers().get(random.nextInt(data.getUsers().size()))));
         issueRequest.put("assignee", getUserParam(data.getUsers().get(random.nextInt(data.getUsers().size()))));
 
         return issueRequest;

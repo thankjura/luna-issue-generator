@@ -9,6 +9,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import ru.slie.luna.rest.client.model.*;
+import ru.slie.luna.rest.client.model.request.RequestUser;
 
 import java.util.Base64;
 import java.util.HashMap;
@@ -63,6 +64,16 @@ public class JiraRestClient {
         Map<String, Object> body = new HashMap<>();
         body.put("fields", request);
         return restClient.post().uri("/rest/api/2/issue").body(body).retrieve().body(new ParameterizedTypeReference<>() {});
+    }
+
+    public RemoteUser createUser(RequestUser user) {
+        return restClient.post().uri("/rest/api/2/user").body(user).retrieve().body(new ParameterizedTypeReference<>() {});
+    }
+
+    public void addUserToGroup(String username, String group) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("name", username);
+        restClient.post().uri("/rest/api/2/group/user?groupname={group}", group).body(body).retrieve().body(new ParameterizedTypeReference<>() {});
     }
 
     public List<RemotePriority> getPriorities() {
