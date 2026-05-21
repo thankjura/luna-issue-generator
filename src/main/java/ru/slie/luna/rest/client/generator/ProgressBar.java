@@ -25,13 +25,30 @@ public class ProgressBar {
             tasksPerSecond = (double) count / (elapsedTimeMs / 1000.0);
         }
 
+        String etaString = "--s";
+        if (tasksPerSecond > 0 && count < total) {
+            long remainingTasks = total - count;
+            long remainingSeconds = Math.round(remainingTasks / tasksPerSecond);
+
+            if (remainingSeconds >= 60) {
+                long minutes = remainingSeconds / 60;
+                long seconds = remainingSeconds % 60;
+                etaString = minutes + "m " + seconds + "s";
+            } else {
+                etaString = remainingSeconds + "s";
+            }
+        } else if (count >= total) {
+            etaString = "0s";
+        }
+
         String progressChars = "█".repeat(numChars);
         String emptyChars = " ".repeat(barLength - numChars);
-        out.printf("\r[%s%s] %d/%d (%d%%) | %.1f t/s | %s",
+        out.printf("\r[%s%s] %d/%d (%d%%) | %.1f t/s | ETA: %s | %s",
                 progressChars, emptyChars,
                 count, total,
                 (int) (progressPercent * 100),
                 tasksPerSecond,
+                etaString,
                 message);
         out.flush();
     }
