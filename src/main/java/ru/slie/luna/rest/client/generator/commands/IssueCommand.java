@@ -171,6 +171,7 @@ public class IssueCommand implements Runnable {
             Semaphore semaphore = new Semaphore(threads);
 
             IssueGenerator generator = new IssueGenerator(new ArrayList<>(projectsMap.values()));
+            long startTime = System.currentTimeMillis();
 
             try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
                 for (long i = 0; i < count; i++) {
@@ -220,6 +221,20 @@ public class IssueCommand implements Runnable {
             } else {
                 out.println("Генерация успешно завершена!");
             }
+
+            long totalTimeMs = System.currentTimeMillis() - startTime;
+            double totalTimeSec = totalTimeMs / 1000.0;
+
+            double avgSpeed = 0.0;
+            if (totalTimeSec > 0) {
+                avgSpeed = created.get() / totalTimeSec;
+            }
+
+            out.printf("Создано задач: %d, за %.0f сек, средняя скорость: %.2f задач/сек%n",
+                    created.get(),
+                    totalTimeSec,
+                    avgSpeed);
+            out.flush();
         }
     }
 }
