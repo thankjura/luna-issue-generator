@@ -48,7 +48,7 @@ public class LunaRestClient {
     }
 
     public RemoteProjectWithSchemas getProject(String key) {
-        return restClient.get().uri("/rest/projects/{limit}/schemas", key).retrieve().body(new ParameterizedTypeReference<>() {});
+        return restClient.get().uri("/rest/projects/{key}/schemas", key).retrieve().body(new ParameterizedTypeReference<>() {});
     }
 
     public RemoteSearchResult<RemoteUser> findUsers() {
