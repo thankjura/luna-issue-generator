@@ -67,7 +67,7 @@ public class UserCommand implements Runnable {
         }
     }
 
-    @CommandLine.Command(name = "gen", description = "Сгенерировать")
+    @CommandLine.Command(name = "gen", description = "Сгенерировать", mixinStandardHelpOptions = true)
     static class Gen implements Runnable {
         @CommandLine.ParentCommand
         private UserCommand parent;
