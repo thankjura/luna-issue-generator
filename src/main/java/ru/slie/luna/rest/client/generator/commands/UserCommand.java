@@ -10,8 +10,15 @@ import ru.slie.luna.rest.client.generator.TextUtils;
 import ru.slie.luna.rest.client.model.RemoteSearchResult;
 import ru.slie.luna.rest.client.model.RemoteUser;
 import ru.slie.luna.rest.client.model.request.RequestUser;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SequenceWriter;
+import tools.jackson.databind.json.JsonMapper;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -80,6 +87,9 @@ public class UserCommand implements Runnable {
         @CommandLine.Option(names = {"-g", "--group"}, split = ",", description = "Добавить в группу")
         private List<String> groups;
 
+        @CommandLine.Option(names = {"-o", "--out"}, description = "Сохранить результат в файл")
+        private Path outPath;
+
         @Override
         public void run() {
             MainCommand global = parent.mainCommand;
@@ -90,18 +100,26 @@ public class UserCommand implements Runnable {
             ProgressBar progressBar = new ProgressBar(out, count);
             progressBar.print(0, "");
 
-            while (created < count) {
-                try {
-                    created++;
-                    RemoteUser user = client.createUser(generateUser(directory, emailDomain));
-                    progressBar.print(++created, String.format("%-20s, %s.", user.getLogin(), user.getDisplayName()));
-                    if (groups != null && !groups.isEmpty()) {
-                        client.addUserToGroups(user.getLogin(), groups);
-                        progressBar.append(String.format(" Группы: %s", groups));
+            ObjectMapper mapper = new JsonMapper();
+            try (OutputStream os = (outPath != null) ? Files.newOutputStream(outPath) : OutputStream.nullOutputStream();
+                 SequenceWriter seqWriter = mapper.writerWithDefaultPrettyPrinter().writeValuesAsArray(os)) {
+                while (created < count) {
+                    try {
+                        RemoteUser user = client.createUser(generateUser(directory, emailDomain));
+                        if (outPath != null) {
+                            seqWriter.write(user);
+                        }
+                        progressBar.print(++created, String.format("%-20s, %s.", user.getLogin(), user.getDisplayName()));
+                        if (groups != null && !groups.isEmpty()) {
+                            client.addUserToGroups(user.getLogin(), groups);
+                            progressBar.append(String.format(" Группы: %s", groups));
+                        }
+                    } catch (HttpClientErrorException.BadRequest e) {
+                        err.println(e.getMessage());
                     }
-                } catch (HttpClientErrorException.BadRequest e) {
-                    err.println(e.getMessage());
                 }
+            } catch (IOException e) {
+                err.println(e.getMessage());
             }
         }
     }
