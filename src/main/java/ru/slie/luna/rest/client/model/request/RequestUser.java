@@ -6,13 +6,15 @@ public class RequestUser {
     private final String email;
     private final String name;
     private final String lastName;
+    private final String password;
 
-    public RequestUser(int directoryId, String login, String email, String name, String lastName) {
+    public RequestUser(int directoryId, String login, String email, String name, String lastName, String password) {
         this.directoryId = directoryId;
         this.login = login;
         this.email = email;
         this.name = name;
         this.lastName = lastName;
+        this.password = password;
     }
 
     public int getDirectoryId() {
@@ -33,5 +35,9 @@ public class RequestUser {
 
     public String getLastName() {
         return lastName;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }

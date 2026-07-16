@@ -37,7 +37,7 @@ public class UserCommand implements Runnable {
         CommandLine.usage(this, System.out);
     }
 
-    public static RequestUser generateUser(int directoryId, String emailDomain) {
+    public static RequestUser generateUser(int directoryId, String emailDomain, String password) {
         boolean isMale = new Random().nextBoolean();
         String name = isMale? fakerRu.resolve("name.male_first_name") :  fakerRu.resolve("name.female_first_name");
         String lastName = isMale? fakerRu.resolve("name.male_last_name") :  fakerRu.resolve("name.female_last_name");
@@ -46,7 +46,7 @@ public class UserCommand implements Runnable {
             emailDomain = "@" + emailDomain;
         }
 
-        return new RequestUser(directoryId, login, login + emailDomain, name, lastName);
+        return new RequestUser(directoryId, login, login + emailDomain, name, lastName, password);
     }
 
     @CommandLine.Command(name = "count", description = "Вывести кол-во пользователей")
@@ -84,6 +84,9 @@ public class UserCommand implements Runnable {
         @CommandLine.Option(names = {"-c", "--count"}, description = "Кол-во пользователей", defaultValue = "1")
         private int count = 1;
 
+        @CommandLine.Option(names = {"-p", "--password"}, description = "Пароль пользователя")
+        private String password;
+
         @CommandLine.Option(names = {"-g", "--group"}, split = ",", description = "Добавить в группу")
         private List<String> groups;
 
@@ -105,7 +108,7 @@ public class UserCommand implements Runnable {
                  SequenceWriter seqWriter = mapper.writerWithDefaultPrettyPrinter().writeValuesAsArray(os)) {
                 while (created < count) {
                     try {
-                        RemoteUser user = client.createUser(generateUser(directory, emailDomain));
+                        RemoteUser user = client.createUser(generateUser(directory, emailDomain, password));
                         if (outPath != null) {
                             seqWriter.write(user);
                         }
