@@ -131,7 +131,10 @@ public class IssueCommand implements Runnable {
                 progressBar.print(2, entry.getKey());
                 RemoteProjectWithSchemas projectWithSchemas = client.getProject(entry.getKey());
                 if (projectWithSchemas.getIssueTypeSchema() != null) {
-                    entry.getValue().addIssueTypes(projectWithSchemas.getIssueTypeSchema().getIssueTypeIds());
+                    entry.getValue().addIssueTypes(projectWithSchemas.getIssueTypeSchema().getIssueTypes()
+                                                           .stream()
+                                                           .filter(i -> !i.isSubtask())
+                                                           .map(RemoteIssueType::getId).toList());
                 }
 
                 if (projectWithSchemas.getPrioritySchema() != null) {

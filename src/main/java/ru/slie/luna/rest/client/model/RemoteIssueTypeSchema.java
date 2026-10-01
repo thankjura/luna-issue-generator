@@ -19,8 +19,4 @@ public class RemoteIssueTypeSchema {
     public List<RemoteIssueType> getIssueTypes() {
         return issueTypes;
     }
-
-    public List<Long> getIssueTypeIds() {
-        return issueTypeIds;
-    }
 }
