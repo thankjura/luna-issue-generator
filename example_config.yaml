@@ -1,0 +1,109 @@
+# Пример конфигурации стенда: миллион задач, замеры поиска и переиндексации.
+#
+#   java -jar target/luna-issue-generator-1.2.jar up -w ~/luna-bench -c example_config.yaml
+#   java -jar target/luna-issue-generator-1.2.jar bench search  -w ~/luna-bench
+#   java -jar target/luna-issue-generator-1.2.jar bench reindex -w ~/luna-bench -l baseline
+#   java -jar target/luna-issue-generator-1.2.jar down -w ~/luna-bench
+#
+# up сохраняет итоговую конфигурацию в <workdir>/config.yaml, остальные команды берут её оттуда.
+# Не указанные здесь параметры берутся из src/main/resources/generator-default.yaml.
+# Любой параметр можно переопределить: --set issues.count=50000 или LUNA_GEN_ISSUES__COUNT=50000.
+
+server:
+  # Луна стенда; если по адресу никто не отвечает, up/bench запускают её через luna-sdk
+  url: http://localhost:7080
+  user: admin
+  password: admin
+
+# Seed: одинаковый seed даёт одинаковую структуру данных и контрольные значения
+seed: 42
+# Параллельные запросы при создании задач, больше пула БД Луны (20) смысла нет
+threads: 16
+# Остановить генерацию после стольких неудачных задач
+maxErrors: 100
+
+sdk:
+  # Путь к распакованному luna-sdk (тильда не раскрывается, нужен полный путь)
+  command: /path/to/luna-sdk-1.0.2/bin/luna-sdk
+  # Память Луны; применяется при следующем запуске (после down)
+  jvmArgs: -Xmx8g
+  # JMX для замеров CPU, heap и GC Луны; 0 выключает
+  jmxPort: 7091
+  # Версия Луны из ~/.m2 или Maven, пусто: версия по умолчанию luna-sdk
+  lunaVersion: ""
+  # Внешняя БД вместо контейнера: jdbc:postgresql://host:5432/luna?user=...&password=...
+  dbUri: ""
+  offline: false
+  startTimeout: 600
+
+users:
+  # Лицензия разработчика из SDK разрешает 10 активных пользователей,
+  # из них admin и до 3 контрольных (controls.valuesPerField) для полей типа user
+  count: 5
+  emailDomain: example.com
+  passwordLength: 12
+  groups: [users]
+
+projects:
+  count: 5
+  keyPrefix: LT
+
+fields:
+  # Число доп. полей каждого типа (здесь 200)
+  perType:
+    string: 30
+    text: 20
+    integer: 20
+    double: 15
+    date: 15
+    dateTime: 15
+    boolean: 10
+    singleSelect: 20
+    multiSelect: 15
+    user: 10
+    multiUser: 5
+    label: 10
+    issueRef: 4
+    multiIssueRef: 3
+    priority: 2
+    # Без поиска, только заполняются
+    color: 3
+    duration: 3
+  # Число вариантов у полей выбора
+  minOptions: 3
+  maxOptions: 30
+  # Доля задач, где доп. поле заполнено
+  fillRate: 0.3
+
+issues:
+  # ~1 час при ~300 задачах/с
+  count: 1000000
+  markdownDescriptionRate: 0.1
+  # Прогресс сохраняется после каждой пачки, прерванный up продолжит с неё
+  batchSize: 2000
+
+controls:
+  # Уникальные значения на поле с поиском, каждое у issuesPerValue задач: по ним проверяется поиск
+  valuesPerField: 3
+  issuesPerValue: 5
+
+bench:
+  # Интервал замеров нагрузки (samples.csv), мс
+  sampleMillis: 1000
+  search:
+    warmup: 2
+    repeat: 10
+    pageSize: 50
+    # Параллельные клиенты теста пропускной способности, каждый уровень по durationSeconds
+    concurrency: [1, 8, 32]
+    durationSeconds: 20
+    # Свои запросы для замера времени
+    queries:
+      - name: project-and-text
+        qs: 'project = LT1 and summary ~ "dolor"'
+      - name: recent-sorted
+        qs: 'created >= 2000-01-01 order by updated desc'
+  reindex:
+    # Прогонов переиндексации подряд; среднее попадёт в report.json
+    repeat: 2
+    pollMillis: 1000

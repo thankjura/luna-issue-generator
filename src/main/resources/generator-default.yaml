@@ -1,0 +1,105 @@
+# Default configuration of `luna-issue-generator generate`.
+# Any value can be overridden by the config file (-c), environment variables
+# (LUNA_GEN_ISSUES__COUNT=1000000, segments separated by "__") or --set issues.count=1000000.
+
+server:
+  url: http://localhost:7080
+  user: admin
+  password: admin
+
+# Seed for reproducible structure: control values and the issues they are given to
+seed: 42
+# Parallel HTTP requests while creating issues. Each one holds a DB connection of the server,
+# more than maximumPoolSize in database.yml (20 by default) only queues requests.
+# Older Luna builds took two connections per issue: keep threads below half of the pool there.
+threads: 16
+# Stop issue generation after this many failed issues (after retries)
+maxErrors: 100
+
+users:
+  count: 50
+  directoryId: 1
+  emailDomain: example.com
+  passwordLength: 12
+  # Groups granting permissions in the default permission schema
+  groups: [users]
+
+projects:
+  count: 5
+  keyPrefix: LT
+  # Schema ids for every project; a missing one takes the first schema of that kind on the server.
+  # Keys: permission, issueType, workflow, priority, issueTypeScreen, fieldLayout, notification
+  schemas: {}
+
+fields:
+  # Number of custom fields of each type (200 in total)
+  perType:
+    string: 30
+    text: 20
+    integer: 20
+    double: 15
+    date: 15
+    dateTime: 15
+    boolean: 10
+    singleSelect: 20
+    multiSelect: 15
+    user: 10
+    multiUser: 5
+    label: 10
+    issueRef: 4
+    multiIssueRef: 3
+    priority: 2
+    # Not searchable, only filled
+    color: 3
+    duration: 3
+  minOptions: 3
+  maxOptions: 30
+  # Probability that a custom field gets a value in an issue
+  fillRate: 0.3
+
+issues:
+  count: 1000
+  markdownDescriptionRate: 0.1
+  # Progress is saved after each batch, an interrupted run continues from the last saved batch
+  batchSize: 2000
+
+controls:
+  # Unique values per searchable field, each given to issuesPerValue known issues.
+  # The expected counts are written to the summary and used to check the search.
+  valuesPerField: 3
+  issuesPerValue: 5
+
+# ---- up / down / bench ----
+
+# Luna started by luna-sdk when server.url does not respond (server.url must then point to localhost)
+sdk:
+  # luna-sdk launcher: a path or a command on PATH
+  command: luna-sdk
+  jvmArgs: -Xmx4g
+  # Local JMX port for monitoring the Luna JVM (CPU, heap, GC), 0 disables JMX
+  jmxPort: 7091
+  # Luna version, empty: luna-sdk default
+  lunaVersion: ""
+  # External database jdbc:postgresql://host:port/db?user=..&password=.., empty: PostgreSQL container in the workdir
+  dbUri: ""
+  offline: false
+  startTimeout: 600
+  extraArgs: []
+
+bench:
+  # Server metrics sampling interval, ms
+  sampleMillis: 1000
+  search:
+    # Unmeasured and measured runs of every query
+    warmup: 2
+    repeat: 10
+    pageSize: 50
+    # Parallel clients of the throughput test, each level runs durationSeconds; [] skips it
+    concurrency: [1, 8, 32]
+    durationSeconds: 20
+    # Additional queries: - {name: open-bugs, qs: 'project = LT1 and summary ~ "abc"'}
+    queries: []
+  reindex:
+    # Full blocking reindex runs in one bench
+    repeat: 1
+    pollMillis: 1000
